@@ -489,9 +489,9 @@ function gMeanText(sid){
   return a.length?num(a.reduce((t,x)=>t+x,0)/a.length)+' ('+a.length+' نمرە)':'—';
 }
 function gRow(s,i){
-  const G=UI.gr,v=G.vals[s.id];
-  return '<tr><td class="n">'+(i+1)+'</td><td class="nm">'+esc(s.name)+'</td><td class="mut">'+esc(s.code)+'</td>'+
-  '<td><input class="gin" type="number" step="any" min="0" inputmode="decimal" dir="ltr" data-part="gr" data-sid="'+s.id+'" value="'+esc(v==null?'':v)+'"></td>'+
+  const G=UI.gr,v=G.vals[s.id],lv=leaveOn(s,G.date);
+  return '<tr'+(lv?' style="opacity:.75"':'')+'><td class="n">'+(i+1)+'</td><td class="nm">'+esc(s.name)+'</td><td class="mut">'+esc(s.code)+'</td>'+
+  '<td><input class="gin" type="number" step="any" min="0" inputmode="decimal" dir="ltr" data-part="gr" data-sid="'+s.id+'" value="'+esc(v==null?'':v)+'"'+(lv?' disabled':'')+'>'+(lv?' <span class="badge lv" title="'+esc(lv.reason||'')+'">🏖️ مۆڵەت — نمرە ناخرێتە ژوورەوە</span>':'')+'</td>'+
   '<td class="mut">'+(G.prev[s.id]||[]).length+' نمرەی پێشوو</td><td class="mcell"><b id="gm-'+s.id+'">'+gMeanText(s.id)+'</b></td></tr>';
 }
 function gradesBody(){
@@ -767,7 +767,9 @@ ACTS.saveGr=()=>{
   if(G.date>today()&&!isAdmin()){toast('ناتوانرێت نمرە بۆ ڕۆژی داهاتوو تۆمار بکرێت',true);return}
   DB.grades=DB.grades||[];
   const ops=[];let bad=0;
+  let onLeave=0;
   G.list.forEach(s=>{
+    if(leaveOn(s,G.date)){onLeave++;return}
     const raw=String(G.vals[s.id]==null?'':G.vals[s.id]).trim().replace(',','.');
     const g0={courseId:c.id,sid:s.id,type:G.type,date:G.date};
     const i=DB.grades.findIndex(x=>gk(x)===gk(g0));
@@ -784,7 +786,7 @@ ACTS.saveGr=()=>{
     else DB.grades.push(Object.assign({id:uid(),score:o.score,savedBy:SESSION.name,savedAt:now},o.g0));
   });
   logAct('grade',c.name+(G.group?' — گروپ '+G.group:'')+' — '+gtName(G.type)+' — بەرواری '+G.date+' — '+n+' نمرە');
-  save();G.dirty=false;toast('نمرەکان پاشەکەوت کران ✓ ('+n+' نمرە)');render();
+  save();G.dirty=false;toast('نمرەکان پاشەکەوت کران ✓ ('+n+' نمرە)'+(onLeave?' — '+onLeave+' خوێندکار مۆڵەتیان هەبوو و نمرەیان بۆ نەخرا':''));render();
 };
 CHG.gsm=el=>{UI.gsm[el.dataset.k]=el.value;if(el.dataset.k==='stage')UI.gsm.course='';render()};
 INP.gsm=el=>{UI.gsm[el.dataset.k]=el.value;$('#gsm-out').innerHTML=gsumOut(gsumRows(UI.gsm))};
