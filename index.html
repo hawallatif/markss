@@ -1249,7 +1249,7 @@ function leaveCard(){
   const dis=STUDENT_ONLY&&!ONLINE,m=UI.lmsg;
   const mine=UI.gs?liveLeaves().filter(l=>leaveOf(UI.gs,l)).sort((a,b)=>b.date.localeCompare(a.date)):[];
   return '<section class="card"><h2>🏖️ داوای مۆڵەت</h2>'+(dis?'<p class="mut" style="margin:0">داواکردنی مۆڵەت تەنها لە لینکی ئۆنلاینی سیستەمەکەوە دەکرێت.</p>':
-  '<form data-form="leave"><div class="grid2"><label>ناوی سیانی<input name="name" required autocomplete="off"></label><label>کۆدی خوێندکار<input name="code" required dir="ltr" autocomplete="off"></label></div>'+
+  '<form data-form="leave"><label>کۆدی خوێندکار<input name="code" required dir="ltr" autocomplete="off"></label>'+
   '<label>بەرواری مۆڵەت<input name="date" type="date" required min="'+today()+'" value="'+today()+'"></label>'+
   '<label>هۆکار<textarea name="reason" class="rtl" required maxlength="300"></textarea></label>'+
   '<button class="btn pri block">ناردنی داوای مۆڵەت</button></form>')+
@@ -1257,27 +1257,26 @@ function leaveCard(){
   (mine.length?'<h3 style="margin-top:14px">مۆڵەتەکانم</h3><div class="dts">'+mine.map(l=>'<span title="'+esc(l.reason)+'">'+l.date+' — '+dayName(l.date)+'</span>').join('')+'</div>':'')+'</section>';
 }
 FORMS.leave=async f=>{
-  const name=f.elements.name.value.trim(),code=f.elements.code.value.trim(),date=f.elements.date.value,reason=f.elements.reason.value.trim();
+  const code=f.elements.code.value.trim(),date=f.elements.date.value,reason=f.elements.reason.value.trim();
   const fail=t=>{UI.lmsg={t,bad:true};render()};
-  if(!name||!code||!date||!reason){toast('هەموو خانەکان پڕبکەرەوە',true);return}
+  if(!code||!date||!reason){toast('هەموو خانەکان پڕبکەرەوە',true);return}
   if(date<today()){toast('ناتوانرێت مۆڵەت بۆ ڕۆژی ڕابردوو داوا بکرێت',true);return}
   const b=f.querySelector('button'),old=b.textContent;b.disabled=true;b.textContent='⏳ ...';
   try{
     let rec;
     if(ONLINE){
-      const res=await api({action:'leave',code,name,date,reason});
-      if(!res.ok){fail(res.error==='notfound'?'ئەم کۆدە نەدۆزرایەوە.':res.error==='name'?'ناو لەگەڵ کۆدەکە یەک ناگرێتەوە.':res.error==='dup'?'بۆ ئەم بەروارە پێشتر داوای مۆڵەتت کردووە.':'هەڵەی سێرڤەر: '+res.error);return}
-      rec=res.leave||{id:uid(),code,name,date,reason,savedAt:Date.now()};
+      const res=await api({action:'leave',code,date,reason});
+      if(!res.ok){fail(res.error==='notfound'?'ئەم کۆدە نەدۆزرایەوە.':res.error==='dup'?'بۆ ئەم بەروارە پێشتر داوای مۆڵەتت کردووە.':'هەڵەی سێرڤەر: '+res.error);return}
+      rec=res.leave||{id:uid(),code,name:'',date,reason,savedAt:Date.now()};
     }else{
       const s=DB.students.find(x=>String(x.code)===code||(x.ch&&x.ch===H(code)));
       if(!s){fail('ئەم کۆدە نەدۆزرایەوە.');return}
-      if(normN(s.name)!==normN(name)){fail('ناو لەگەڵ کۆدەکە یەک ناگرێتەوە.');return}
       if(liveLeaves().some(l=>l.date===date&&leaveOf(s,l))){fail('بۆ ئەم بەروارە پێشتر داوای مۆڵەتت کردووە.');return}
       rec={id:uid(),sid:s.id,code:s.code,name:s.name,stage:s.stage,date,reason,savedAt:Date.now(),savedBy:'خوێندکار'};
     }
     DB.leaves=DB.leaves||[];DB.leaves.push(rec);
     if(!ONLINE)save();
-    UI.lmsg={t:'داوای مۆڵەت نێردرا ✓ — '+date+' ('+dayName(date)+')',bad:false};
+    UI.lmsg={t:'داوای مۆڵەت نێردرا ✓'+(rec.name?' — '+rec.name:'')+' — '+date+' ('+dayName(date)+')',bad:false};
     render();
   }catch(e){fail(ONLINE?netMsg(e):'هەڵەیەک ڕوویدا')}
   finally{if(b.isConnected){b.disabled=false;b.textContent=old}}
