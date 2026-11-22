@@ -289,18 +289,24 @@ function guestView(){
   leaveCard()+(UI.gs?studentReport(UI.gs):'')+'</main>';
 }
 function studentReport(s){
-  const ix=absIndex(),S=DB.settings,gx=gradeStats();
+  const ix=absIndex(),S=DB.settings,gx=gradeStats(),showF=!!S.showFinal,FC=showF?GCfg():null,fctx=showF?{ax:ix,gx,mx:midIndex()}:null;
   const cs=DB.courses.filter(c=>String(c.stage)===String(s.stage)&&(c.type==='theory'||(c.groupTeachers||{})[s.group])).sort(byName);
   const cards=cs.map(c=>{
     const arr=(ix[c.id+'|'+s.id]||[]).map(x=>x.d).sort(),a=arr.length,st=status(a);
     let msg='';
     if(st==='fail')msg='بەهۆی '+a+' غیاب ('+a*S.pct+'%) لەم وانەیە کەوتوویت.';
     else if(st==='warn')msg='ئاگاداری! '+a+' غیابت هەیە — بە '+S.fail+' غیاب دەکەویت.';
+    let fin='';
+    if(showF){
+      const r=calcRow(c,s,FC,fctx),pc=pairOf(c);let cb='';
+      if(pc&&(pc.type!=='practical'||(pc.groupTeachers||{})[s.group])){const o=calcRow(pc,s,FC,fctx);cb='<div class="mut">کۆی تیۆری + پراکتیکی: <b>'+num(r2(Math.min(FC.total,r.total+o.total)))+' / '+num(r2(r.max+o.max))+'</b>'+(o.miss.length?' <span class="badge warn">ناتەواو</span>':'')+'</div>'}
+      fin='<div class="gbox"><div class="gb"><span class="mut">🎯 نمرەی کۆتایی</span><b>'+num(r.total)+' / '+num(r.max)+'</b>'+(r.miss.length?'<small>ناتەواو — نمرەی نەدراو: '+esc(r.miss.join('، '))+'</small>':'')+cb+'</div></div>';
+    }
     return '<div class="scard '+st+'"><div class="sh"><b>'+esc(c.name)+'</b><small class="mut">'+typeName(c.type)+'</small><span class="badge '+st+'">'+STL[st]+'</span></div>'+
     '<div class="big">'+a*S.pct+'%</div><div class="mut">'+a+' غیاب (هەر غیابێک = '+S.pct+'%)</div>'+
     '<div class="bar"><i style="width:'+Math.min(100,a/S.fail*100)+'%"></i></div>'+(msg?'<p class="msg">'+msg+'</p>':'')+
     (arr.length?'<div class="dts">بەرواری غیابەکان: '+arr.map(d=>'<span>'+d+'</span>').join('')+'</div>':'')+
-    '<div class="gbox">'+GT.map(t=>{const a=(gx[c.id+'|'+s.id]||{})[t[0]];return '<div class="gb"><span class="mut">'+t[1]+' (mean)</span><b>'+(a?num(meanOf(a)):'—')+'</b>'+(a?'<small>'+a.length+' نمرە: '+a.map(x=>num(x.v)).join('، ')+'</small>':'')+'</div>'}).join('')+'</div></div>';
+    '<div class="gbox">'+GT.map(t=>{const a=(gx[c.id+'|'+s.id]||{})[t[0]];return '<div class="gb"><span class="mut">'+t[1]+' (mean)</span><b>'+(a?num(meanOf(a)):'—')+'</b>'+(a?'<small>'+a.length+' نمرە: '+a.map(x=>num(x.v)).join('، ')+'</small>':'')+'</div>'}).join('')+'</div>'+fin+'</div>';
   }).join('');
   return '<section class="card"><h3>'+esc(s.name)+'</h3><div class="mut">'+stageName(s.stage)+(s.group?' — گروپ '+esc(s.group):'')+'</div></section>'+(cards||'<div class="card empty">هێشتا هیچ وانەیەک بۆ ئەم قۆناغە دیاری نەکراوە.</div>');
 }
@@ -586,7 +592,7 @@ window.addEventListener('beforeunload',e=>{if(UI.att&&UI.att.dirty){e.preventDef
 /* ================= تۆماری چالاکییەکان ================= */
 /* هەر چالاکییەک وەک تۆمارێکی تایبەت لەناو DB.grades (type='log' و score=null) پاشەکەوت دەکرێت،
    بۆیە بە هەمان هاوکاتکردنی نمرەکان دەگاتە سەرۆکی بەش و لە هیچ ڕاپۆرتێکی نمرەدا دەرناکەوێت. */
-const ACT_T=[['login','چوونەژوورەوە'],['logout','چوونەدەرەوە'],['att','وەرگرتنی غیاب'],['grade','نمرەدانان'],['mid','نمرەی میدتێرم'],['lvok','قبوڵکردنی مۆڵەت'],['lvno','ڕەفزکردنی مۆڵەت'],['lvdel','سڕینەوەی مۆڵەت']];
+const ACT_T=[['login','چوونەژوورەوە'],['logout','چوونەدەرەوە'],['att','وەرگرتنی غیاب'],['grade','نمرەدانان'],['mid','نمرەی میدتێرم'],['cfg','گۆڕینی ڕێکخستن'],['lvok','قبوڵکردنی مۆڵەت'],['lvno','ڕەفزکردنی مۆڵەت'],['lvdel','سڕینەوەی مۆڵەت']];
 const actName=k=>(ACT_T.find(x=>x[0]===k)||['',k])[1];
 function logAct(act,info){
   if(!SESSION||SESSION.role==='guest'||STUDENT_ONLY)return;
@@ -1170,6 +1176,12 @@ function cfgCard(C,bad){
   '<div class="row"><span id="gc-sum"></span><button class="btn pri">💾 پاشەکەوتکردن</button><button type="button" class="btn" data-act="gcDef">گەڕاندنەوەی ڕێکخستنی بنەڕەتی</button></div>'+
   '<div class="hint">«تەنها تیۆری» دەبێت کۆی ببێتە '+num(C.total)+'، و «تیۆری + پراکتیکی» پێکەوە دەبێت ببنە '+num(C.total)+'. «نمرەکان لەسەر چەندن» بەتاڵ بێت یانی هەمان نمرەی بەشەکەیە؛ ئەگەر کویزەکان لەسەر ١٠ن و بەشەکەی ٤یە، لێرە ١٠ بنووسە. بۆ لابردنی بەشێک نمرەکەی بکە ٠. وانەی تیۆری+پراکتیکی لە «وانەکان» بە دوو وانە دروست دەکرێت (هەمان ناو و قۆناغ) و لە وانەی تیۆری تیکی «پراکتیکیشی هەیە» دەکەیت.</div></form></details></div>';
 }
+function showFinalCard(C){
+  const on=!!DB.settings.showFinal;
+  return '<div class="card no-print"><h3>👁️ نمرەی کۆتایی لە پۆرتاڵی خوێندکار</h3><label class="row" style="align-items:center;gap:10px;cursor:pointer"><input type="checkbox" data-chg="showfinal"'+(on?' checked':'')+' style="width:20px;height:20px"> <b>ڕێگە بدە خوێندکار نمرەی کۆتایی (لە '+num(C.total)+') ببینێت</b></label>'+
+  '<div class="hint">'+(on?'🟢 ئێستا خوێندکاران نمرەی کۆتایی هەر وانەیەک (و کۆی تیۆری + پراکتیکی) لە پۆرتاڵی خۆیان دەبینن.':'🔴 ئێستا نمرەی کۆتایی بۆ خوێندکاران شاراوەیە. تەنها غیاب و نمرەی چالاکییەکان دەبینن.')+'</div></div>';
+}
+CHG.showfinal=el=>{DB.settings.showFinal=!!el.checked;logAct('cfg','نمرەی کۆتایی بۆ خوێندکار: '+(el.checked?'پیشاندان':'شاردنەوە'));cfg();toast(el.checked?'خوێندکاران نمرەی کۆتایی دەبینن ✓':'نمرەی کۆتایی بۆ خوێندکاران شاردرایەوە ✓');render()};
 function finalBody(){
   const R=UI.fn,C=GCfg(),cs=myCourses().filter(c=>!R.stage||String(c.stage)===String(R.stage));
   if(R.course&&!cs.some(c=>c.id===R.course))R.course='';
@@ -1185,7 +1197,7 @@ function finalBody(){
   return '<div class="print-only"><h2>'+esc(DB.settings.college)+' — '+esc(DB.settings.title)+'</h2><div>نمرەی کۆتایی ('+num(C.total)+') — '+today()+'</div></div>'+
   (bad?'<div class="alert no-print">⚠️ دابەشکردنی نمرەکان تەواو نییە:<br>'+errs.join('<br>')+'<br>'+(isAdmin()?'لە خوارەوە ڕێکی بخە.':'داوا لە سەرۆکی بەش بکە ڕێکی بخات.')+'</div>':'')+
   (isAdmin()&&warns.length?'<div class="alert no-print">'+warns.map(esc).join('<br>')+'</div>':'')+
-  (isAdmin()?cfgCard(C,bad):'<div class="card no-print"><div class="chips" style="margin:0"><span class="chip">تەنها تیۆری: <b>'+ps('solo')+'</b></span><span class="chip">تیۆری: <b>'+ps('theory')+'</b></span><span class="chip">پراکتیکی: <b>'+ps('practical')+'</b></span></div></div>')+
+  (isAdmin()?showFinalCard(C)+cfgCard(C,bad):'<div class="card no-print"><div class="chips" style="margin:0"><span class="chip">تەنها تیۆری: <b>'+ps('solo')+'</b></span><span class="chip">تیۆری: <b>'+ps('theory')+'</b></span><span class="chip">پراکتیکی: <b>'+ps('practical')+'</b></span></div></div>')+
   '<div class="card no-print"><div class="filters">'+
   '<label>قۆناغ<select data-chg="fn" data-k="stage">'+stageOptions(R.stage,true)+'</select></label>'+
   '<label>وانە<select data-chg="fn" data-k="course">'+opt('','هەموو وانەکان',R.course)+cs.map(c=>opt(c.id,esc(c.name)+' ('+typeName(c.type)+')',R.course)).join('')+'</select></label>'+
