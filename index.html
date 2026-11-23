@@ -261,6 +261,20 @@ function computeRows(f){
   return out;
 }
 
+/* غیابی تیۆری و پراکتیکیی یەک وانە پێکەوە کۆ دەکرێنەوە (بۆ لیستی ئاگادارکراو/کەوتووی سەرەتا) */
+function homeRows(){
+  const rows=computeRows({}),map=new Map(),out=[];
+  rows.forEach(r=>{
+    const pc=(r.c.dual||r.c.type==='practical')?pairOf(r.c):null,th=pc?(r.c.type==='practical'?pc:r.c):null;
+    const key=r.s.id+'|'+(th||r.c).id;
+    let o=map.get(key);
+    if(!o){o={s:r.s,c:th||r.c,a:0,parts:[],dates:[]};map.set(key,o);out.push(o)}
+    o.a+=r.a;o.parts.push({c:r.c,a:r.a});o.dates=o.dates.concat(r.dates);
+  });
+  out.forEach(o=>{o.pct=o.a*DB.settings.pct;o.st=status(o.a);o.parts.sort((x,y)=>(x.c.type==='theory'?0:1)-(y.c.type==='theory'?0:1))});
+  return out.sort((x,y)=>y.a-x.a||byName(x.s,y.s));
+}
+
 /* ================= دیمەنەکان ================= */
 function header(){
   const S=DB.settings;
@@ -298,9 +312,13 @@ function studentReport(s){
     else if(st==='warn')msg='ئاگاداری! '+a+' غیابت هەیە — بە '+S.fail+' غیاب دەکەویت.';
     let fin='';
     if(showF){
-      const r=calcRow(c,s,FC,fctx),pc=pairOf(c);let cb='';
-      if(pc&&(pc.type!=='practical'||(pc.groupTeachers||{})[s.group])){const o=calcRow(pc,s,FC,fctx);cb='<div class="mut">کۆی تیۆری + پراکتیکی: <b>'+num(r2(Math.min(FC.total,r.total+o.total)))+' / '+num(r2(r.max+o.max))+'</b>'+(o.miss.length?' <span class="badge warn">ناتەواو</span>':'')+'</div>'}
-      fin='<div class="gbox"><div class="gb"><span class="mut">🎯 نمرەی کۆتایی</span><b>'+num(r.total)+' / '+num(r.max)+'</b>'+(r.miss.length?'<small>ناتەواو — نمرەی نەدراو: '+esc(r.miss.join('، '))+'</small>':'')+cb+'</div></div>';
+      const r=calcRow(c,s,FC,fctx),pc=pairOf(c),paired=pc&&(pc.type!=='practical'||(pc.groupTeachers||{})[s.group]);
+      if(paired&&c.type==='practical')fin='<div class="gbox"><div class="gb"><span class="mut">🎯 نمرەی کۆتایی</span><small>نمرەی کۆتایی تیۆری و پراکتیکی یەکخراوە — لە کارتی وانەی تیۆری ببینە</small></div></div>';
+      else{
+        let tot=r.total,max=r.max,miss=r.miss.slice();
+        if(paired){const o=calcRow(pc,s,FC,fctx);tot=r2(Math.min(FC.total,r.total+o.total));max=r2(Math.min(FC.total,r.max+o.max));miss=miss.concat(o.miss)}
+        fin='<div class="gbox"><div class="gb"><span class="mut">🎯 نمرەی کۆتایی'+(paired?' (تیۆری + پراکتیکی پێکەوە)':'')+'</span><b>'+num(tot)+' / '+num(max)+'</b>'+(miss.length?'<small>ناتەواو — نمرەی نەدراو: '+esc(miss.join('، '))+'</small>':'')+'</div></div>';
+      }
     }
     return '<div class="scard '+st+'"><div class="sh"><b>'+esc(c.name)+'</b><small class="mut">'+typeName(c.type)+'</small><span class="badge '+st+'">'+STL[st]+'</span></div>'+
     '<div class="big">'+a*S.pct+'%</div><div class="mut">'+a+' غیاب (هەر غیابێک = '+S.pct+'%)</div>'+
@@ -329,8 +347,8 @@ function render(){
 
 /* ---------- سەرەتا ---------- */
 function homeBody(){
-  const rows=computeRows({}),w=rows.filter(r=>r.st==='warn'),f=rows.filter(r=>r.st==='fail');
-  const lst=(a,t)=>a.length?'<div class="card tbl"><table><thead><tr><th colspan="4">'+t+' ('+a.length+')</th></tr></thead><tbody>'+a.slice(0,8).map(r=>'<tr class="clk" data-act="detail" data-sid="'+r.s.id+'" data-cid="'+r.c.id+'"><td>'+esc(r.s.name)+'</td><td>'+esc(r.c.name)+'</td><td>'+r.a+' غیاب</td><td>'+r.pct+'%</td></tr>').join('')+'</tbody></table></div>':'';
+  const rows=homeRows(),w=rows.filter(r=>r.st==='warn'),f=rows.filter(r=>r.st==='fail');
+  const lst=(a,t)=>a.length?'<div class="card tbl"><table><thead><tr><th colspan="4">'+t+' ('+a.length+')</th></tr></thead><tbody>'+a.slice(0,8).map(r=>'<tr class="clk" data-act="detail" data-sid="'+r.s.id+'" data-cid="'+r.c.id+'"><td>'+esc(r.s.name)+'</td><td>'+esc(r.c.name)+'</td><td>'+(r.parts.length>1?r.parts.map(p=>'<small>'+typeName(p.c.type)+' '+p.a*DB.settings.pct+'%</small>').join(' + '):r.a+' غیاب')+'</td><td><b>'+r.pct+'%</b></td></tr>').join('')+'</tbody></table></div>':'';
   const pl=allLeaves().filter(l=>lvSt(l)==='pending').length;
   return (pl?'<div class="alert">🏖️ '+pl+' داوای مۆڵەت چاوەڕێی بڕیاری تۆیە. <button class="btn sm pri" onclick="UI.tab=\'leaves\';UI.lv={from:\'\',to:\'\',q:\'\',st:\'pending\'};render()">بینین</button></div>':'')+(isDefaultAdmin()?'<div class="alert">⚠️ پاسۆردی سەرۆکی بەش هێشتا ئەوەی سەرەتاییە. لە «ڕێکخستن و داتا» بیگۆڕە.</div>':'')+
   '<div class="stats"><div class="stat"><b>'+DB.students.length+'</b>خوێندکار</div><div class="stat"><b>'+DB.teachers.length+'</b>مامۆستا</div><div class="stat"><b>'+DB.courses.length+'</b>وانە</div><div class="stat"><b>'+DB.records.length+'</b>جاری غیاب تۆمارکراو</div><div class="stat warn"><b>'+w.length+'</b>ئاگادارکراوە</div><div class="stat fail"><b>'+f.length+'</b>کەوتوو</div></div>'+
