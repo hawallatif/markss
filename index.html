@@ -347,12 +347,13 @@ function render(){
 
 /* ---------- سەرەتا ---------- */
 function homeBody(){
-  const rows=homeRows(),w=rows.filter(r=>r.st==='warn'),f=rows.filter(r=>r.st==='fail');
-  const lst=(a,t)=>a.length?'<div class="card tbl"><table><thead><tr><th colspan="4">'+t+' ('+a.length+')</th></tr></thead><tbody>'+a.slice(0,8).map(r=>'<tr class="clk" data-act="detail" data-sid="'+r.s.id+'" data-cid="'+r.c.id+'"><td>'+esc(r.s.name)+'</td><td>'+esc(r.c.name)+'</td><td>'+(r.parts.length>1?r.parts.map(p=>'<small>'+typeName(p.c.type)+' '+p.a*DB.settings.pct+'%</small>').join(' + '):r.a+' غیاب')+'</td><td><b>'+r.pct+'%</b></td></tr>').join('')+'</tbody></table></div>':'';
+  const HS=UI.hStage||'',rows=homeRows().filter(r=>!HS||String(r.s.stage)===String(HS)),w=rows.filter(r=>r.st==='warn'),f=rows.filter(r=>r.st==='fail');
+  const lst=(a,t)=>a.length?'<div class="card tbl"><table><thead><tr><th colspan="4">'+t+' ('+a.length+')</th></tr></thead><tbody>'+a.slice(0,(UI.hAll&&UI.hAll[t])?a.length:8).map(r=>'<tr class="clk" data-act="detail" data-sid="'+r.s.id+'" data-cid="'+r.c.id+'"><td>'+esc(r.s.name)+'</td><td>'+esc(r.c.name)+'</td><td>'+(r.parts.length>1?r.parts.map(p=>'<small>'+typeName(p.c.type)+' '+p.a*DB.settings.pct+'%</small>').join(' + '):r.a+' غیاب')+'</td><td><b>'+r.pct+'%</b></td></tr>').join('')+(a.length>8?'<tr class="no-print"><td colspan="4" style="text-align:center"><button class="btn sm" data-act="hAll" data-k="'+esc(t)+'">'+((UI.hAll&&UI.hAll[t])?'⬆️ کەمکردنەوە':'⬇️ بینینی هەمووی ('+a.length+')')+'</button></td></tr>':'')+'</tbody></table></div>':'';
   const pl=allLeaves().filter(l=>lvSt(l)==='pending').length;
   return (pl?'<div class="alert">🏖️ '+pl+' داوای مۆڵەت چاوەڕێی بڕیاری تۆیە. <button class="btn sm pri" onclick="UI.tab=\'leaves\';UI.lv={from:\'\',to:\'\',q:\'\',st:\'pending\'};render()">بینین</button></div>':'')+(isDefaultAdmin()?'<div class="alert">⚠️ پاسۆردی سەرۆکی بەش هێشتا ئەوەی سەرەتاییە. لە «ڕێکخستن و داتا» بیگۆڕە.</div>':'')+
   '<div class="stats"><div class="stat"><b>'+DB.students.length+'</b>خوێندکار</div><div class="stat"><b>'+DB.teachers.length+'</b>مامۆستا</div><div class="stat"><b>'+DB.courses.length+'</b>وانە</div><div class="stat"><b>'+DB.records.length+'</b>جاری غیاب تۆمارکراو</div><div class="stat warn"><b>'+w.length+'</b>ئاگادارکراوە</div><div class="stat fail"><b>'+f.length+'</b>کەوتوو</div></div>'+
   '<div class="row no-print" style="margin-bottom:14px;display:none"><button class="btn pri" data-act="goRep" data-st="">هەموو ڕاپۆرتەکان</button><button class="btn danger" data-act="goRep" data-st="fail">تەنها کەوتووەکان</button><button class="btn sec" data-act="goRep" data-st="warn">تەنها ئاگادارکراوەکان</button></div>'+
+  '<div class="card no-print"><div class="row" style="align-items:center"><label>🎓 فلتەری قۆناغ<select data-chg="hst">'+stageOptions(HS,true)+'</select></label><span class="mut">لیستی غیابات (کەوتوو و ئاگادارکراو) بەپێی قۆناغ</span></div></div>'+
   lst(f,'کەوتووەکان')+lst(w,'ئاگادارکراوەکان')+
   (!DB.teachers.length||!DB.courses.length?'<div class="card"><h3>دەستپێکردن</h3><ol><li>لە «خوێندکاران» ناوی خوێندکارەکان زیاد بکە (دەتوانیت لە Excel کۆپی بکەیت).</li><li>لە «مامۆستایان» یوزەر و پاسۆرد دروست بکە.</li><li>لە «وانەکان» وانە دروست بکە و مامۆستا (یان بۆ پراکتیکی: مامۆستا بۆ هەر گروپێک) دیاری بکە.</li></ol></div>':'');
 }
@@ -596,6 +597,8 @@ const stamp=()=>today();
 
 /* ================= ڕووداوەکان ================= */
 const ACTS={},FORMS={},CHG={},INP={};
+CHG.hst=el=>{UI.hStage=el.value;render()};
+ACTS.hAll=a=>{UI.hAll=UI.hAll||{};UI.hAll[a.dataset.k]=!UI.hAll[a.dataset.k];render()};
 document.addEventListener('click',e=>{
   const a=e.target.closest('[data-act]');
   if(a){ACTS[a.dataset.act]&&ACTS[a.dataset.act](a,e);return}
