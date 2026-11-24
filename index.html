@@ -1528,7 +1528,7 @@ function portalView(){
   return header()+'<main class="wrap">'+
   '<section class="hero no-print"><div class="sub">'+esc(S.college)+'</div><h1>'+esc(S.title)+'</h1><p>'+esc(P.about)+'</p>'+
   '<div class="cta"><button class="btn" data-act="goLogin">👩‍🏫 چوونەژوورەوەی مامۆستا / سەرۆکی بەش</button><button class="btn o" data-act="guest">🎓 بینینی غیابەکانم (خوێندکار)</button></div></section>'+
-  '<section class="card no-print"><h2>📚 قۆناغەکان و وانەکان</h2><div class="pst">'+Array.from({length:n},(_,i)=>'<button class="'+(i+1===st?'on':'')+'" data-act="pstage" data-s="'+(i+1)+'">'+stageName(i+1)+'</button>').join('')+'</div>'+
+  portalNote()+'<section class="card no-print"><h2>📚 قۆناغەکان و وانەکان</h2><div class="pst">'+Array.from({length:n},(_,i)=>'<button class="'+(i+1===st?'on':'')+'" data-act="pstage" data-s="'+(i+1)+'">'+stageName(i+1)+'</button>').join('')+'</div>'+
   (cs.length?'<div class="pcg">'+cs.map(c=>'<div class="pc"><b>'+esc(c.n)+'</b><small>'+typeName(c.t)+'</small></div>').join('')+'</div>':'<div class="empty">هێشتا وانەیەک بۆ '+stageName(st)+' بڵاو نەکراوەتەوە.</div>')+'</section>'+
   '<section class="card"><div class="row no-print" style="justify-content:space-between;align-items:center;margin-bottom:10px"><h2 style="margin:0">🗓️ خشتەی خوێندن — '+stageName(st)+'</h2><button class="btn" data-act="print">🖨️ چاپکردن</button></div>'+
   '<div class="sch-head"><div class="u">'+esc(P.univ)+'</div><div class="c">'+esc(S.college)+'</div><div class="m"><span>بەش: '+esc(S.title)+'</span><span>ساڵ: '+esc(STAGE[st]||st)+'</span>'+(P.semester?'<span>سیمەستەر: '+esc(P.semester)+'</span>':'')+'</div></div>'+
@@ -1555,14 +1555,25 @@ FORMS.portal=f=>{
 ACTS.goPortal=()=>{UI.page='portal';render()};
 ACTS.goLogin=()=>{UI.page='login';render()};
 ACTS.pstage=a=>{UI.pst=+a.dataset.s;render()};
+let PST='idle';
 async function fetchPortal(){
-  if(!ONLINE)return;
+  if(!ONLINE||SESSION)return;
+  PST='load';if(!SESSION)render();
   try{
     const r=await api({action:'public'});
     if(r&&r.ok&&r.portal){PUB=r.portal;try{localStorage.setItem('nurs_portal',JSON.stringify(PUB))}catch(e){}
       if(r.settings){DB.settings=Object.assign({},DB.settings,{college:r.settings.college||DB.settings.college,title:r.settings.title||DB.settings.title,stages:r.settings.stages||DB.settings.stages})}
-      if(!SESSION)render()}
-  }catch(e){}
+      PST='ok'}
+    else PST=(r&&r.error==='unknown'||r&&r.error==='bad_action'||(r&&!r.ok))?'old':'err';
+  }catch(e){PST='err'}
+  if(!SESSION)render();
+}
+ACTS.retryPortal=()=>fetchPortal();
+function portalNote(){
+  if(PST==='load'&&!PUB)return '<div class="empty">⏳ داتا بار دەکرێت...</div>';
+  if(PST==='old'&&!PUB)return '<div class="empty">⚠️ سێرڤەر هێشتا نوێ نەکراوەتەوە بۆ پۆرتاڵ (Code.gs). <button class="btn" data-act="retryPortal">دووبارە</button></div>';
+  if(PST==='err'&&!PUB)return '<div class="empty">⚠️ پەیوەندی بە سێرڤەرەوە نەکرا. <button class="btn" data-act="retryPortal">دووبارە هەوڵبدەرەوە</button></div>';
+  return '';
 }
 
 /* ================= دەستپێکردن ================= */
