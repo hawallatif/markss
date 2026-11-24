@@ -83,25 +83,6 @@ details.cfg>summary{cursor:pointer;font-weight:700;font-size:16px}
 .chip.sumok{background:#dcfce7;color:#166534;font-weight:600}.chip.sumbad{background:#fee2e2;color:#991b1b;font-weight:600}
 .chk{display:flex;gap:8px;align-items:center;color:var(--tx);margin:0 0 6px;font-size:14px}.chk input{width:auto;margin:0}.chkl{display:flex;gap:6px 18px;flex-wrap:wrap;margin:6px 0 10px}
 .badge.lv{background:#e0e7ff;color:#3730a3;font-weight:600;margin-right:6px}.chip.lvc{background:#e0e7ff;color:#3730a3}.lvmsg{padding:8px 12px;border-radius:8px;margin-top:10px;font-weight:600}.lvmsg.ok{background:#dcfce7;color:#166534}.lvmsg.bad{background:#fee2e2;color:#991b1b}textarea.rtl{direction:rtl;text-align:right;min-height:80px}
-.hero{background:linear-gradient(135deg,#115e59,#0e7490);color:#fff;border-radius:16px;padding:28px 22px;margin-bottom:16px;text-align:center}
-.hero h1{margin:0 0 6px;font-size:26px}.hero .sub{opacity:.9;font-size:15px}.hero p{max-width:760px;margin:14px auto 0;line-height:1.9;white-space:pre-line}
-.hero .cta{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:18px}.hero .cta .btn{background:#fff;color:var(--p2);font-weight:700}.hero .cta .btn.o{background:rgba(255,255,255,.18);color:#fff}
-.pst{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}.pst button{border:1px solid var(--bd);background:#fff;padding:8px 16px;border-radius:999px;cursor:pointer;font:inherit;color:var(--mut)}.pst button.on{background:var(--p);border-color:var(--p);color:#fff}
-.pcg{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px}.pcg .pc{background:#f8fafc;border:1px solid var(--bd);border-radius:10px;padding:10px 12px}.pcg .pc small{display:block;color:var(--mut)}
-.tabs button.pbtn{background:#ccfbf1;color:var(--p2);font-weight:700}
-.sch-head .u{color:#0f766e;font-size:22px;font-weight:700;text-align:center;border-bottom:2px solid #0f766e;padding:6px}
-.sch-head .c{text-align:center;font-weight:700;font-size:17px;padding:8px;border-bottom:1px solid var(--bd)}
-.sch-head .m{display:flex;justify-content:space-around;flex-wrap:wrap;gap:6px;padding:8px;font-weight:600;border-bottom:1px solid var(--bd);margin-bottom:10px}
-.sch-wrap{overflow-x:auto}.sch{border-collapse:collapse;width:100%;min-width:920px;font-size:13px;text-align:center}
-.sch th.sd,.sch td.sd{background:#1e2b52;color:#fff;width:100px;min-width:100px;padding:6px;border:1px solid #fff;text-align:center}.sch td.sd small{display:block;font-size:11px;opacity:.9}
-.sch th.st{background:#2f9a8f;color:#fff;padding:5px 2px;border:1px solid #fff;font-size:12px;text-align:center}.sch th.st span{display:block}
-.sch td{border:1px solid #fff;padding:8px 6px;vertical-align:middle}
-.sch td.ge{background:#f1f5f9;border:1px solid #e2e8f0}
-.sch td.ce.th{background:#5ba99f;color:#fff}.sch td.ce.pr{background:#1e2b52;color:#fff;font-size:12px}
-.sch td.ce b{display:block;font-size:14px}.sch td.ce span{display:block;font-size:12px}
-.sch tr.off td:not(.sd){background:#fff;color:#0f172a;border:1px solid #e2e8f0;height:52px}
-.sch-foot{margin-top:12px;font-weight:600}
-@media print{.sch,.sch *,.sch-head *{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
 .print-only{display:none}
 @media print{.no-print,.top,.tabs{display:none!important}.print-only{display:block;margin-bottom:10px}body{background:#fff}.card{border:0;padding:0}.wrap{max-width:none;padding:0}}
 </style>
@@ -300,7 +281,6 @@ function header(){
   let r='';
   if(SESSION&&SESSION.role!=='guest')r='<span>'+esc(SESSION.name)+(isAdmin()?' (سەرۆکی بەش)':'')+'</span><button class="btn ghost" data-act="logout">چوونەدەرەوە</button>'+(ONLINE?syncHTML():'');
   else if(SESSION&&!STUDENT_ONLY)r='<button class="btn ghost" data-act="toLogin">گەڕانەوە</button>';
-  else if(!SESSION)r='<button class="btn ghost" data-act="goPortal">🏠 پۆرتاڵ</button><button class="btn ghost" data-act="goLogin">👩‍🏫 چوونەژوورەوەی مامۆستا / سەرۆکی بەش</button><button class="btn ghost" data-act="guest">🎓 خوێندکار</button>';
   return '<header class="top no-print"><div><div class="t1">'+esc(S.college)+'</div><div class="t2">سیستەمی غیابات — '+esc(S.title)+'</div></div><div class="who">'+r+'</div></header>';
 }
 function loginView(){
@@ -348,7 +328,7 @@ function studentReport(s){
   }).join('');
   return '<section class="card"><h3>'+esc(s.name)+'</h3><div class="mut">'+stageName(s.stage)+(s.group?' — گروپ '+esc(s.group):'')+'</div></section>'+(cards||'<div class="card empty">هێشتا هیچ وانەیەک بۆ ئەم قۆناغە دیاری نەکراوە.</div>');
 }
-const ADMIN_TABS=[['home','🏠 سەرەتا'],['attend','✍️ وەرگرتنی غیاب'],['grades','📝 نمرەدانان'],['mid','🧪 نمرەی میدتێرم'],['final','🎯 نمرەی کۆتایی'],['leaves','🏖️ مۆڵەتەکان'],['sessions','🗓️ تۆماری ڕۆژانە'],['activity','🕵️ چالاکییەکان'],['teachers','👩‍🏫 مامۆستایان'],['students','🎓 خوێندکاران'],['courses','📚 وانەکان'],['portal','🌐 پۆرتاڵ'],['wipe','🗑️ سڕینەوەی داتا'],['settings','⚙️ ڕێکخستن و داتا']];
+const ADMIN_TABS=[['home','🏠 سەرەتا'],['attend','✍️ وەرگرتنی غیاب'],['grades','📝 نمرەدانان'],['mid','🧪 نمرەی میدتێرم'],['final','🎯 نمرەی کۆتایی'],['leaves','🏖️ مۆڵەتەکان'],['sessions','🗓️ تۆماری ڕۆژانە'],['activity','🕵️ چالاکییەکان'],['teachers','👩‍🏫 مامۆستایان'],['students','🎓 خوێندکاران'],['courses','📚 وانەکان'],['wipe','🗑️ سڕینەوەی داتا'],['settings','⚙️ ڕێکخستن و داتا']];
 const TEACH_TABS=[['attend','✍️ وەرگرتنی غیاب'],['report','📊 ڕاپۆرتی وانەکانم'],['grades','📝 نمرەدانان'],['gsum','🏅 کۆی نمرەکان'],['mid','🧪 نمرەی میدتێرم'],['final','🎯 نمرەی کۆتایی'],['leaves','🏖️ مۆڵەتەکان'],['sessions','🗓️ تۆمارەکانم'],['data','💾 ناردنی غیابات']];
 function shell(tabs){
   if(ONLINE)tabs=tabs.filter(t=>t[0]!=='data');
@@ -357,7 +337,7 @@ function shell(tabs){
 }
 function render(){
   let h;
-  if(!SESSION)h=(UI.page==='login'?loginView():portalView());
+  if(!SESSION)h=loginView();
   else if(SESSION.role==='guest')h=guestView();
   else if(ONLINE&&!LOADED)h=header()+'<main class="wrap narrow"><div class="card empty">⏳ داتاکان بار دەکرێن...<br><br><button class="btn" data-act="resync">دووبارە هەوڵبدەرەوە</button></div></main>';
   else h=header()+shell(isAdmin()?ADMIN_TABS:TEACH_TABS);
@@ -511,7 +491,7 @@ function dataBody(){
   return '<div class="card"><h3>📤 ناردنی غیابات بۆ سەرۆکی بەش</h3><p>دوای وەرگرتنی غیاب، ئەم فایلە دابەزێنە و بیدە بە سەرۆکی بەش (واتس‌ئاپ، ئیمەیڵ، ...).</p><button class="btn pri" data-act="exTeacherJson">⬇️ دابەزاندنی فایلی غیابەکانم</button></div>'+
   '<div class="card"><h3>📥 وەرگرتنی داتای نوێ لە سەرۆکی بەش</h3><p>ئەگەر سەرۆکی بەش وانە یان خوێندکاری گۆڕی و فایلێکی نوێی ناردبوو، لێرە بیهێنە.</p><button class="btn" data-act="importMerge">هێنانی فایل</button></div>';
 }
-const BODY={portal:portalAdminBody,wipe:wipeBody,activity:activityBody,grades:gradesBody,gsum:gsumBody,mid:midBody,final:finalBody,home:homeBody,attend:attendBody,report:reportBody,sessions:sessionsBody,leaves:leavesBody,teachers:teachersBody,students:studentsBody,courses:coursesBody,settings:settingsBody,data:dataBody};
+const BODY={wipe:wipeBody,activity:activityBody,grades:gradesBody,gsum:gsumBody,mid:midBody,final:finalBody,home:homeBody,attend:attendBody,report:reportBody,sessions:sessionsBody,leaves:leavesBody,teachers:teachersBody,students:studentsBody,courses:coursesBody,settings:settingsBody,data:dataBody};
 
 /* ================= نمرەکان ================= */
 const GT=[['seminar','سیمینار'],['quiz','کویز'],['assignment','ئەسایمێنت'],['report','ڕاپۆرت']];
@@ -740,9 +720,9 @@ FORMS.login=f=>{
   logAct('login','');save();
   UI.tab=isAdmin()?'home':'attend';UI.att=null;render();
 };
-ACTS.logout=()=>{if(SESSION&&SESSION.role!=='guest'&&LOADED){logAct('logout','');save();if(ONLINE){try{const pl=isAdmin()?DB:{epoch:DB.epoch,cfgStamp:DB.cfgStamp,records:DB.records,grades:DB.grades||[],leaves:DB.leaves||[]};fetch(API_URL,{method:'POST',keepalive:true,headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'sync',u:SESSION.u,ph:SESSION.ph,db:pl})}).catch(()=>{})}catch(e){}}}SESSION=null;UI.page='portal';UI.att=null;UI.gr=null;UI.md=null;try{sessionStorage.removeItem('nurs_sess')}catch(e){}if(ONLINE){DB=baseDB();LOADED=false;PENDING=false;try{localStorage.removeItem(KEY2)}catch(e){}}render()};
+ACTS.logout=()=>{if(SESSION&&SESSION.role!=='guest'&&LOADED){logAct('logout','');save();if(ONLINE){try{const pl=isAdmin()?DB:{epoch:DB.epoch,cfgStamp:DB.cfgStamp,records:DB.records,grades:DB.grades||[],leaves:DB.leaves||[]};fetch(API_URL,{method:'POST',keepalive:true,headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'sync',u:SESSION.u,ph:SESSION.ph,db:pl})}).catch(()=>{})}catch(e){}}}SESSION=null;UI.att=null;UI.gr=null;UI.md=null;try{sessionStorage.removeItem('nurs_sess')}catch(e){}if(ONLINE){DB=baseDB();LOADED=false;PENDING=false;try{localStorage.removeItem(KEY2)}catch(e){}}render()};
 ACTS.guest=()=>{SESSION={role:'guest'};UI.gs=null;UI.gmsg='';render()};
-ACTS.toLogin=()=>{SESSION=null;UI.page='portal';if(ONLINE)DB=baseDB();render()};
+ACTS.toLogin=()=>{SESSION=null;if(ONLINE)DB=baseDB();render()};
 FORMS.lookup=f=>{
   const c=f.elements.code.value.trim();
   if(ONLINE)return onlineLookup(f,c);
@@ -1459,121 +1439,9 @@ function bootOnline(){
     }
   }catch(e){}
   render();
-  if(SESSION)doSync();else fetchPortal();
+  if(SESSION)doSync();
   setInterval(()=>{if(SESSION&&SESSION.role!=='guest'&&!document.hidden)doSync()},45000);
   window.addEventListener('beforeunload',e=>{if(PENDING&&SESSION&&SESSION.role!=='guest'){e.preventDefault();e.returnValue=''}});
-}
-
-/* ================= پۆرتاڵی گشتی ================= */
-const PORTAL_DEF={univ:'زانکۆی پۆلیتەکنیکی گەرمیان',about:'بەشی پەرستاری یەکێکە لە بەشە زانستییەکانی کۆلێج. ئامانجمان ئامادەکردنی پەرستاری شارەزا و دڵسۆزە بۆ خزمەتکردنی کۆمەڵگا.\nلێرەدا دەتوانیت وانەکان و خشتەی خوێندن بەپێی قۆناغ ببینیت.',contact:'',semester:'',head:''};
-const WK=['شەممە','یەکشەممە','دووشەممە','سێشەممە','چوارشەممە','پێنجشەممە','هەینی'];
-const WK_EN=['Saturday','Sunday','Monday','Tuesday','Wednesday','Thursday','Friday'];
-let PUB=null;
-try{PUB=JSON.parse(localStorage.getItem('nurs_portal')||'null')}catch(e){}
-function portalData(){
-  const l=DB&&DB.settings&&DB.settings.portal,p=(l&&l.t)?l:(PUB||l||{});
-  return {univ:p.univ||PORTAL_DEF.univ,about:p.about||PORTAL_DEF.about,contact:p.contact||'',semester:p.semester||'',head:p.head||'',sched:p.sched||{},courses:p.courses||{}};
-}
-function portalCourses(P,stage){
-  if(DB&&DB.courses&&DB.courses.length)return DB.courses.filter(c=>String(c.stage)===String(stage)).sort((a,b)=>byName(a,b)).map(c=>({n:c.name,t:c.type}));
-  return P.courses[stage]||[];
-}
-const fixDig=t=>String(t==null?'':t).replace(/[٠-٩]/g,d=>d.charCodeAt(0)-1632).replace(/[۰-۹]/g,d=>d.charCodeAt(0)-1776);
-const toMin=t=>{const m=String(t||'').match(/(\d{1,2})[:.](\d{2})/);return m?+m[1]*60+ +m[2]:null};
-const fmtMin=m=>pad(Math.floor(m/60))+':'+pad(m%60);
-const SLM=30;
-function parseSched(txt){
-  const out=[];
-  fixDig(txt).split(/\r?\n/).map(x=>x.trim()).filter(Boolean).forEach(l=>{
-    const p=l.split(/\t|,|،|;|\|/).map(x=>x.trim());
-    let di=WK.indexOf(p[0]);if(di<0)di=WK_EN.findIndex(x=>x.toLowerCase()===String(p[0]).toLowerCase());
-    if(di<0)return;
-    let s0,e0,o;const rg=String(p[1]||'').match(/(\d{1,2}[:.]\d{2})\s*[-–—]\s*(\d{1,2}[:.]\d{2})/);
-    if(rg){s0=toMin(rg[1]);e0=toMin(rg[2]);o=2}else{s0=toMin(p[1]);e0=toMin(p[2]);o=3}
-    if(s0==null||e0==null||e0<=s0)return;
-    const s=Math.floor(s0/SLM)*SLM,e=Math.ceil(e0/SLM)*SLM;
-    out.push({di,s,e,c:p[o]||'',m:p[o+1]||'',r:p[o+2]||'',k:/پراکتیک|^pr|prac/i.test(p[o+3]||'')?'pr':'th'});
-  });
-  return out.sort((a,b)=>a.di-b.di||a.s-b.s||a.e-b.e);
-}
-function schedTable(rows){
-  let lo=8*60+30,hi=14*60+30;
-  rows.forEach(r=>{lo=Math.min(lo,r.s);hi=Math.max(hi,r.e)});
-  const n=(hi-lo)/SLM,days=[0,1,2,3,4,5];if(rows.some(r=>r.di===6))days.push(6);
-  let h='<div class="sch-wrap"><table class="sch" dir="ltr"><thead><tr><th class="sd">ڕۆژ</th>';
-  for(let i=0;i<n;i++){const a=lo+i*SLM;h+='<th class="st"><span>'+fmtMin(a)+'</span><span>'+fmtMin(a+SLM)+'</span></th>'}
-  h+='</tr></thead><tbody>';
-  days.forEach(di=>{
-    const dr=rows.filter(r=>r.di===di),lab=nn=>'<td class="sd" rowspan="'+nn+'"><b>'+WK_EN[di]+'</b><small>'+WK[di]+'</small></td>';
-    if(!dr.length){h+='<tr class="off">'+lab(1)+'<td colspan="'+n+'">OFF</td></tr>';return}
-    const lanes=[];
-    dr.forEach(r=>{let l=lanes.find(x=>x[x.length-1].e<=r.s);if(!l){l=[];lanes.push(l)}l.push(r)});
-    lanes.forEach((l,li)=>{
-      h+='<tr>'+(li===0?lab(lanes.length):'');
-      let pos=lo;
-      l.forEach(r=>{
-        if(r.s>pos)h+='<td class="ge" colspan="'+((r.s-pos)/SLM)+'"></td>';
-        h+='<td class="ce '+r.k+'" colspan="'+((r.e-r.s)/SLM)+'"><b>'+esc(r.c)+'</b>'+(r.m?'<span>👤 '+esc(r.m)+'</span>':'')+(r.r?'<span>📍 '+esc(r.r)+'</span>':'')+'</td>';
-        pos=r.e;
-      });
-      if(pos<hi)h+='<td class="ge" colspan="'+((hi-pos)/SLM)+'"></td>';
-      h+='</tr>';
-    });
-  });
-  return h+'</tbody></table></div>';
-}
-function portalView(){
-  const S=DB.settings,P=portalData(),n=Math.min(S.stages||4,4),st=UI.pst&&UI.pst<=n?UI.pst:1;
-  const cs=portalCourses(P,st),rows=parseSched(P.sched[st]);
-  return header()+'<main class="wrap">'+
-  '<section class="hero no-print"><div class="sub">'+esc(S.college)+'</div><h1>'+esc(S.title)+'</h1><p>'+esc(P.about)+'</p>'+
-  '<div class="cta"><button class="btn" data-act="goLogin">👩‍🏫 چوونەژوورەوەی مامۆستا / سەرۆکی بەش</button><button class="btn o" data-act="guest">🎓 بینینی غیابەکانم (خوێندکار)</button></div></section>'+
-  portalNote()+'<section class="card no-print"><h2>📚 قۆناغەکان و وانەکان</h2><div class="pst">'+Array.from({length:n},(_,i)=>'<button class="'+(i+1===st?'on':'')+'" data-act="pstage" data-s="'+(i+1)+'">'+stageName(i+1)+'</button>').join('')+'</div>'+
-  (cs.length?'<div class="pcg">'+cs.map(c=>'<div class="pc"><b>'+esc(c.n)+'</b><small>'+typeName(c.t)+'</small></div>').join('')+'</div>':'<div class="empty">هێشتا وانەیەک بۆ '+stageName(st)+' بڵاو نەکراوەتەوە.</div>')+'</section>'+
-  '<section class="card"><div class="row no-print" style="justify-content:space-between;align-items:center;margin-bottom:10px"><h2 style="margin:0">🗓️ خشتەی خوێندن — '+stageName(st)+'</h2><button class="btn" data-act="print">🖨️ چاپکردن</button></div>'+
-  '<div class="sch-head"><div class="u">'+esc(P.univ)+'</div><div class="c">'+esc(S.college)+'</div><div class="m"><span>بەش: '+esc(S.title)+'</span><span>ساڵ: '+esc(STAGE[st]||st)+'</span>'+(P.semester?'<span>سیمەستەر: '+esc(P.semester)+'</span>':'')+'</div></div>'+
-  (rows.length?schedTable(rows):'<div class="empty">خشتەی ئەم قۆناغە هێشتا بڵاو نەکراوەتەوە.</div>')+
-  (P.head?'<div class="sch-foot">سەرۆکی بەش<br>'+esc(P.head)+'</div>':'')+'</section>'+
-  (P.contact?'<section class="card no-print"><h3>📞 پەیوەندی</h3><div style="white-space:pre-line">'+esc(P.contact)+'</div></section>':'')+'</main>';
-}
-function portalAdminBody(){
-  const S=DB.settings,P=portalData(),n=Math.min(S.stages||4,4);
-  return '<div class="card"><h3>🌐 بەڕێوەبردنی پۆرتاڵی گشتی</h3><p class="mut" style="margin-top:0">ئەم زانیارییانە لە لاپەڕەی سەرەکی بۆ هەموو کەس پیشان دەدرێن.</p>'+
-  '<form data-form="portal"><div class="row"><label class="grow">ناوی زانکۆ<input name="univ" value="'+esc(P.univ)+'"></label><label class="grow">سیمەستەر<input name="semester" value="'+esc(P.semester)+'" placeholder="2"></label><label class="grow">سەرۆکی بەش<input name="head" value="'+esc(P.head)+'"></label></div>'+
-  '<label>دەربارەی بەشی پەرستاری<textarea name="about" class="rtl" style="min-height:120px">'+esc(P.about)+'</textarea></label>'+
-  '<label>زانیاری پەیوەندی (ئارەزوومەندانە)<textarea name="contact" class="rtl">'+esc(P.contact)+'</textarea></label>'+
-  Array.from({length:n},(_,i)=>'<label>خشتەی '+stageName(i+1)+'<textarea name="s'+(i+1)+'" class="rtl" style="min-height:140px" placeholder="یەکشەممە, 08:30-10:30, Nutrition and Diet Therapy, م.هەوال لطیف فاتح, Hall 1, تیۆری&#10;دووشەممە, 08:30-12:30, Health Assessment Pr, نەخۆشخانەی کەلار, , پراکتیکی">'+esc((P.sched||{})[i+1]||'')+'</textarea></label>').join('')+
-  '<div class="hint" style="margin:0 0 10px">هەر دێڕێک یەک وانەیە: <b>ڕۆژ , کاتی دەستپێک-کاتی کۆتایی , وانە , مامۆستا , هۆڵ , جۆر</b>. جۆر: «تیۆری» (سەوز) یان «پراکتیکی» (شین). ڕۆژەکان: شەممە، یەکشەممە، دووشەممە، سێشەممە، چوارشەممە، پێنجشەممە. ئەگەر چەند گروپ لە یەک کاتدا هەبوون (وەک پراکتیکی A/B/C) چەند دێڕ بنووسە بە هەمان کات و لە خشتەکەدا لەسەر یەک دادەنرێن. ڕۆژێک بێ دێڕ = OFF. لیستی وانەکانی هەر قۆناغ خۆکار لە بەشی «وانەکان» وەردەگیرێت.</div>'+
-  '<button class="btn pri">💾 پاشەکەوتکردن و بڵاوکردنەوە</button></form></div>';
-}
-FORMS.portal=f=>{
-  const n=Math.min(DB.settings.stages||4,4),sched={},courses={};
-  for(let i=1;i<=n;i++){sched[i]=f.elements['s'+i].value;courses[i]=DB.courses.filter(c=>c.stage===i).map(c=>({n:c.name,t:c.type}))}
-  DB.settings.portal={univ:f.elements.univ.value.trim(),semester:f.elements.semester.value.trim(),head:f.elements.head.value.trim(),about:f.elements.about.value.trim(),contact:f.elements.contact.value.trim(),sched,courses,t:Date.now()};
-  logAct('cfg','نوێکردنەوەی پۆرتاڵی گشتی');cfg();toast('پۆرتاڵ پاشەکەوت کرا ✓');render();
-};
-ACTS.goPortal=()=>{UI.page='portal';render()};
-ACTS.goLogin=()=>{UI.page='login';render()};
-ACTS.pstage=a=>{UI.pst=+a.dataset.s;render()};
-let PST='idle';
-async function fetchPortal(){
-  if(!ONLINE||SESSION)return;
-  PST='load';if(!SESSION)render();
-  try{
-    const r=await api({action:'public'});
-    if(r&&r.ok&&r.portal){PUB=r.portal;try{localStorage.setItem('nurs_portal',JSON.stringify(PUB))}catch(e){}
-      if(r.settings){DB.settings=Object.assign({},DB.settings,{college:r.settings.college||DB.settings.college,title:r.settings.title||DB.settings.title,stages:r.settings.stages||DB.settings.stages})}
-      PST='ok'}
-    else PST=(r&&r.error==='unknown'||r&&r.error==='bad_action'||(r&&!r.ok))?'old':'err';
-  }catch(e){PST='err'}
-  if(!SESSION)render();
-}
-ACTS.retryPortal=()=>fetchPortal();
-function portalNote(){
-  if(PST==='load'&&!PUB)return '<div class="empty">⏳ داتا بار دەکرێت...</div>';
-  if(PST==='old'&&!PUB)return '<div class="empty">⚠️ سێرڤەر هێشتا نوێ نەکراوەتەوە بۆ پۆرتاڵ (Code.gs). <button class="btn" data-act="retryPortal">دووبارە</button></div>';
-  if(PST==='err'&&!PUB)return '<div class="empty">⚠️ پەیوەندی بە سێرڤەرەوە نەکرا. <button class="btn" data-act="retryPortal">دووبارە هەوڵبدەرەوە</button></div>';
-  return '';
 }
 
 /* ================= دەستپێکردن ================= */
